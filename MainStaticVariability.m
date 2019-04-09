@@ -1,0 +1,456 @@
+close all;
+clearvars;
+warning('off','all');
+clc;
+
+addpath('C:\Users\florent.moissenet\Documents\Professionnel\routines\github\Static-Marker-Variability');
+cd('C:\Users\florent.moissenet\Documents\Professionnel\routines\github\Static-Marker-Variability\data');
+
+% Works for ICS defined as X: walking direction, Z: vertical
+% Load C3D files with hip, knee and ankle joint centres as virtual markers
+
+nstatic = 3;
+figComp = figure; hold on; axis equal; view(90,0);
+colorSet = {'red' 'green' 'blue' 'magenta' 'cyan'};
+for i = 1:nstatic
+    [file path] = uigetfile('*.c3d','C3D-files (*.c3d)');
+    btk         = btkReadAcquisition([path,file]);    
+    Marker      = btkGetMarkers(btk);
+    markerNames = fieldnames(Marker);
+    nMarker     = length(markerNames);
+    
+    % 1) Compute mean markers
+    % ---------------------------------------------------------------------
+    for m = 1:nMarker
+        R1 = [cosd(20) sind(20) 0; -sind(20) cosd(20) 0; 0 0 1];
+        Markerc1.(markerNames{m}) = [mean(Marker.(markerNames{m})(:,1),1), ...
+                                    mean(Marker.(markerNames{m})(:,2),1), ...
+                                    mean(Marker.(markerNames{m})(:,3),1)]*R1;
+    end
+    
+    % 2) Pelvic rotation alignment
+    % ---------------------------------------------------------------------
+    % Plot markers
+    fig = figure; hold on; axis equal; view(90,0);
+    for m = 1:nMarker
+        plot3(Markerc1.(markerNames{m})(:,1), ...
+              Markerc1.(markerNames{m})(:,2), ...
+              Markerc1.(markerNames{m})(:,3), ...
+              'Marker','.','Markersize',20,'Color','red');
+    end
+    % Select anterior superior iliac spines
+    disp('Click on right anterior superior iliac spines');
+    PelvisPoints(1,:) = ginput3d(1);
+    disp('Click on left anterior superior iliac spines');
+    PelvisPoints(2,:) = ginput3d(1);
+    % Identify markers
+    for k = 1:size(PelvisPoints,1)
+        distance = 1e5;
+        for m = 1:nMarker
+            point1 = [0, ...
+                      Markerc1.(markerNames{m})(:,2), ...
+                      Markerc1.(markerNames{m})(:,3)];
+            point2 = PelvisPoints(k,:);
+            if norm(point1-point2) < distance 
+                distance = norm(point1-point2);
+                PelvisMarker(k,:) = [Markerc1.(markerNames{m})(:,1), ...
+                                     Markerc1.(markerNames{m})(:,2), ...
+                                     Markerc1.(markerNames{m})(:,3)];   
+            end
+        end
+        plot3(PelvisMarker(k,1), ...
+              PelvisMarker(k,2), ...
+              PelvisMarker(k,3), ...
+              'Marker','.','Markersize',20,'Color','green');
+        pause(0.1);
+    end
+    close(fig);
+    % Translate the middle point of the anterior superior iliac spines at
+    % the origin of ICS
+    for m = 1:nMarker
+        Markerc2.(markerNames{m}) = Markerc1.(markerNames{m})-...
+                                   ([PelvisMarker(1,1),PelvisMarker(1,2),0] + ...
+                                    [PelvisMarker(2,1),PelvisMarker(2,2),0])/2;
+    end
+    % Rotate all markers to align the anterior superior iliac spine axis
+    % with Y axis of the ICS
+    vec1     = [0 1 0]; % Y axis of ICS
+    vec2     = [PelvisMarker(1,1),PelvisMarker(1,2),0] - ...
+               [PelvisMarker(2,1),PelvisMarker(2,2),0];
+    rotation = vrrotvec(vec1,vec2);
+    R        = [cos(rotation(4)-pi)  sin(rotation(4)-pi) 0; ...
+                -sin(rotation(4)-pi) cos(rotation(4)-pi) 0; ...
+                0                 0                1];
+    for m = 1:nMarker
+        Markerc2.(markerNames{m}) = Markerc2.(markerNames{m})*R;
+    end
+%     fig = figure; hold on; axis equal; view(90,0);
+%     for m = 1:nMarker
+%         plot3(Markerc1.(markerNames{m})(:,1), ...
+%               Markerc1.(markerNames{m})(:,2), ...
+%               Markerc1.(markerNames{m})(:,3), ...
+%               'Marker','.','Markersize',20,'Color','red');
+%         plot3(Markerc2.(markerNames{m})(:,1), ...
+%               Markerc2.(markerNames{m})(:,2), ...
+%               Markerc2.(markerNames{m})(:,3), ...
+%               'Marker','.','Markersize',20,'Color','green');
+%     end
+    
+    % 3) Translation to common origin / ankle (Osis et al. 2015)
+    % ---------------------------------------------------------------------    
+    % Plot markers
+    fig = figure; hold on; axis equal; view(90,0);
+    for m = 1:nMarker
+        plot3(Markerc2.(markerNames{m})(:,1), ...
+              Markerc2.(markerNames{m})(:,2), ...
+              Markerc2.(markerNames{m})(:,3), ...
+              'Marker','.','Markersize',20,'Color','red');
+    end
+    % Select ankle lateral malleoli
+    disp('Click on right ankle lateral malleoli');
+    AnklePoints(1,:) = ginput3d(1);
+    disp('Click on left ankle lateral malleoli');
+    AnklePoints(2,:) = ginput3d(1);
+    % Identify markers
+    for k = 1:size(AnklePoints,1)
+        distance = 1e5;
+        for m = 1:nMarker
+            point1 = [0, ...
+                      Markerc2.(markerNames{m})(:,2), ...
+                      Markerc2.(markerNames{m})(:,3)];
+            point2 = AnklePoints(k,:);
+            if norm(point1-point2) < distance 
+                distance = norm(point1-point2);
+                AnkleMarker(k,:) = [Markerc2.(markerNames{m})(:,1), ...
+                                    Markerc2.(markerNames{m})(:,2), ...
+                                    Markerc2.(markerNames{m})(:,3)];   
+            end
+        end
+        plot3(AnkleMarker(k,1), ...
+              AnkleMarker(k,2), ...
+              AnkleMarker(k,3), ...
+              'Marker','.','Markersize',20,'Color','green');
+        pause(0.1);
+    end
+    close(fig);
+    % Translate the middle point of the lateral malleoli at the origin of 
+    % ICS
+    for m = 1:nMarker
+        Markerc3.(markerNames{m}) = Markerc2.(markerNames{m})-...
+                                    ([AnkleMarker(1,1),AnkleMarker(1,2),AnkleMarker(1,3)] + ...
+                                     [AnkleMarker(2,1),AnkleMarker(2,2),AnkleMarker(2,3)])/2;
+    end
+%     fig = figure; hold on; axis equal; view(90,0);
+%     for m = 1:nMarker
+%         plot3(Markerc2.(markerNames{m})(:,1), ...
+%               Markerc2.(markerNames{m})(:,2), ...
+%               Markerc2.(markerNames{m})(:,3), ...
+%               'Marker','.','Markersize',20,'Color','red');
+%         plot3(Markerc3.(markerNames{m})(:,1), ...
+%               Markerc3.(markerNames{m})(:,2), ...
+%               Markerc3.(markerNames{m})(:,3), ...
+%               'Marker','.','Markersize',20,'Color','green');
+%     end
+
+    % 4) Scaling by centroid size (Osis et al. 2015)
+    % --------------------------------------------------------------------- 
+    % Compute individual scaling factor
+    stemp = 0;
+    for m = 1:nMarker
+        stemp = stemp + (Markerc3.(markerNames{m})(:,1)^2 + ...
+                         Markerc3.(markerNames{m})(:,2)^2 + ...
+                         Markerc3.(markerNames{m})(:,3)^2); 
+    end
+    s = sqrt(stemp/nMarker);
+    % Normalization to anatomical scale
+    for m = 1:nMarker
+        Markerc4.(markerNames{m}) = Markerc3.(markerNames{m})./s; 
+    end
+%     fig = figure; hold on; axis equal; view(90,0);
+%     for m = 1:nMarker
+%         plot3(Markerc3.(markerNames{m})(:,1), ...
+%               Markerc3.(markerNames{m})(:,2), ...
+%               Markerc3.(markerNames{m})(:,3), ...
+%               'Marker','.','Markersize',20,'Color','red');
+%         plot3(Markerc4.(markerNames{m})(:,1), ...
+%               Markerc4.(markerNames{m})(:,2), ...
+%               Markerc4.(markerNames{m})(:,3), ...
+%               'Marker','.','Markersize',20,'Color','green');
+%     end
+
+    % 5) Optimized rotation about ankle (Osis et al. 2015)
+    % --------------------------------------------------------------------- 
+    % Plot markers
+    fig = figure; hold on; axis equal; view(90,0);
+    for m = 1:nMarker
+        plot3(Markerc4.(markerNames{m})(:,1), ...
+              Markerc4.(markerNames{m})(:,2), ...
+              Markerc4.(markerNames{m})(:,3), ...
+              'Marker','.','Markersize',20,'Color','red');
+    end
+    % Select shank markers
+    nShankMarkers = input('How many shank markers per leg? ');
+    disp('Click on all right and left shank markers');
+    for m = 1:nShankMarkers*2
+        ShankPoints(m,:) = ginput3d(1);
+    end
+    % Identify markers
+    for k = 1:size(ShankPoints,1)
+        distance = 1e5;
+        for m = 1:nMarker
+            point1 = [0, ...
+                      Markerc4.(markerNames{m})(:,2), ...
+                      Markerc4.(markerNames{m})(:,3)];
+            point2 = ShankPoints(k,:);
+            if norm(point1-point2) < distance 
+                distance = norm(point1-point2);
+                ShankMarkers(k,:) = [Markerc4.(markerNames{m})(:,1), ...
+                                     Markerc4.(markerNames{m})(:,2), ...
+                                     Markerc4.(markerNames{m})(:,3)];   
+            end
+        end
+        plot3(ShankMarkers(k,1), ...
+              ShankMarkers(k,2), ...
+              ShankMarkers(k,3), ...
+              'Marker','.','Markersize',20,'Color','green');
+        pause(0.1);
+    end
+    close(fig);
+    % Get minimum height of shank markers
+    minShank = min(ShankMarkers(:,3));
+    % Identify the primary axis of the shank markers in the sagittal plane, 
+    % supposed to be the longitudinal shank axis
+    pcaShank = pca(ShankMarkers(:,[1,3]));
+    % Compute the rotation needed to minimise the angle between shanks and
+    % vertical
+    vec1     = [0 0 1]; % Z axis of ICS
+    if pcaShank(1,2) > pcaShank(1,1)
+        vec2 = [pcaShank(1,1) 0 pcaShank(1,2)];
+    else
+        vec2 = [pcaShank(1,2) 0 pcaShank(1,1)];
+    end
+    rotation = vrrotvec(vec1,vec2);
+    R        = [cos(rotation(4))  0 sin(rotation(4)); ...
+                0                    1 0            ;...
+                -sin(rotation(4)) 0 cos(rotation(4))];
+    % Rotation only markers above ankles
+    for m = 1:nMarker
+        if Markerc4.(markerNames{m})(:,3) >= minShank
+            Markerc5.(markerNames{m}) = Markerc4.(markerNames{m})*R;
+        else
+            Markerc5.(markerNames{m}) = Markerc4.(markerNames{m});
+        end
+    end
+%     fig = figure; hold on; axis equal; view(90,0);
+%     for m = 1:nMarker
+%         plot3(Markerc4.(markerNames{m})(:,1), ...
+%               Markerc4.(markerNames{m})(:,2), ...
+%               Markerc4.(markerNames{m})(:,3), ...
+%               'Marker','.','Markersize',20,'Color','red');
+%         plot3(Markerc5.(markerNames{m})(:,1), ...
+%               Markerc5.(markerNames{m})(:,2), ...
+%               Markerc5.(markerNames{m})(:,3), ...
+%               'Marker','.','Markersize',20,'Color','green');
+%     end  
+    
+    % 6) Translation to common origin / knee (Osis et al. 2015)
+    % ---------------------------------------------------------------------    
+    % Plot markers
+    fig = figure; hold on; axis equal; view(90,0);
+    for m = 1:nMarker
+        plot3(Markerc5.(markerNames{m})(:,1), ...
+              Markerc5.(markerNames{m})(:,2), ...
+              Markerc5.(markerNames{m})(:,3), ...
+              'Marker','.','Markersize',20,'Color','red');
+    end
+    % Select knee lateral epicondyle
+    disp('Click on right knee lateral epicondyle');
+    KneePoints(1,:) = ginput3d(1);
+    disp('Click on left knee lateral epicondyle');
+    KneePoints(2,:) = ginput3d(1);
+    % Identify markers
+    for k = 1:size(KneePoints,1)
+        distance = 1e5;
+        for m = 1:nMarker
+            point1 = [0, ...
+                      Markerc5.(markerNames{m})(:,2), ...
+                      Markerc5.(markerNames{m})(:,3)];
+            point2 = KneePoints(k,:);
+            if norm(point1-point2) < distance 
+                distance = norm(point1-point2);
+                KneeMarker(k,:) = [Markerc5.(markerNames{m})(:,1), ...
+                                   Markerc5.(markerNames{m})(:,2), ...
+                                   Markerc5.(markerNames{m})(:,3)];   
+            end
+        end
+        plot3(KneeMarker(k,1), ...
+              KneeMarker(k,2), ...
+              KneeMarker(k,3), ...
+              'Marker','.','Markersize',20,'Color','green');
+        pause(0.1);
+    end
+    close(fig);
+    % Translate the middle point of the knee lateral epicondyle at the  
+    % origin of ICS
+    for m = 1:nMarker
+        Markerc6.(markerNames{m}) = Markerc5.(markerNames{m})-...
+                                    ([KneeMarker(1,1),KneeMarker(1,2),KneeMarker(1,3)] + ...
+                                     [KneeMarker(2,1),KneeMarker(2,2),KneeMarker(2,3)])/2;
+    end
+%     fig = figure; hold on; axis equal; view(90,0);
+%     for m = 1:nMarker
+%         plot3(Markerc5.(markerNames{m})(:,1), ...
+%               Markerc5.(markerNames{m})(:,2), ...
+%               Markerc5.(markerNames{m})(:,3), ...
+%               'Marker','.','Markersize',20,'Color','red');
+%         plot3(Markerc6.(markerNames{m})(:,1), ...
+%               Markerc6.(markerNames{m})(:,2), ...
+%               Markerc6.(markerNames{m})(:,3), ...
+%               'Marker','.','Markersize',20,'Color','green');
+%     end
+    
+    % 7) Optimized rotation about knee (Osis et al. 2015)
+    % --------------------------------------------------------------------- 
+    % Plot markers
+    fig = figure; hold on; axis equal; view(90,0);
+    for m = 1:nMarker
+        plot3(Markerc6.(markerNames{m})(:,1), ...
+              Markerc6.(markerNames{m})(:,2), ...
+              Markerc6.(markerNames{m})(:,3), ...
+              'Marker','.','Markersize',20,'Color','red');
+    end
+    % Select thigh markers
+    nThighMarkers = input('How many thigh markers per leg? ');
+    disp('Click on all right and left thigh markers');
+    for m = 1:nThighMarkers*2
+        ThighPoints(m,:) = ginput3d(1);
+    end
+    % Identify markers
+    for k = 1:size(ThighPoints,1)
+        distance = 1e5;
+        for m = 1:nMarker
+            point1 = [0, ...
+                      Markerc6.(markerNames{m})(:,2), ...
+                      Markerc6.(markerNames{m})(:,3)];
+            point2 = ThighPoints(k,:);
+            if norm(point1-point2) < distance 
+                distance = norm(point1-point2);
+                ThighMarkers(k,:) = [Markerc6.(markerNames{m})(:,1), ...
+                                     Markerc6.(markerNames{m})(:,2), ...
+                                     Markerc6.(markerNames{m})(:,3)];   
+            end
+        end
+        plot3(ThighMarkers(k,1), ...
+              ThighMarkers(k,2), ...
+              ThighMarkers(k,3), ...
+              'Marker','.','Markersize',20,'Color','green');
+        pause(0.1);
+    end
+    close(fig);
+    % Get minimum height of thigh markers
+    minThigh = min(ThighMarkers(:,3));
+    % Identify the primary axis of the thigh markers in the sagittal plane, 
+    % supposed to be the longitudinal thigh axis
+    pcaThigh = pca(ThighMarkers(:,[1,3]));
+    % Compute the rotation needed to minimise the angle between thighs and
+    % vertical
+    vec1     = [0 0 1]; % Z axis of ICS
+    if pcaThigh(1,2) > pcaThigh(1,1)
+        vec2 = [pcaThigh(1,1) 0 pcaThigh(1,2)];
+    else
+        vec2 = [pcaThigh(1,2) 0 pcaThigh(1,1)];
+    end
+    rotation = vrrotvec(vec1,vec2);
+    R        = [cos(rotation(4))  0 sin(rotation(4)); ...
+                0                    1 0            ;...
+                -sin(rotation(4)) 0 cos(rotation(4))];
+    % Rotation only markers above knees
+    for m = 1:nMarker
+        if Markerc6.(markerNames{m})(:,3) >= minThigh
+            Markerc7.(markerNames{m}) = Markerc6.(markerNames{m})*R;
+        else
+            Markerc7.(markerNames{m}) = Markerc6.(markerNames{m});
+        end
+    end
+%     fig = figure; hold on; axis equal; view(90,0);
+%     for m = 1:nMarker
+%         plot3(Markerc6.(markerNames{m})(:,1), ...
+%               Markerc6.(markerNames{m})(:,2), ...
+%               Markerc6.(markerNames{m})(:,3), ...
+%               'Marker','.','Markersize',20,'Color','red');
+%         plot3(Markerc7.(markerNames{m})(:,1), ...
+%               Markerc7.(markerNames{m})(:,2), ...
+%               Markerc7.(markerNames{m})(:,3), ...
+%               'Marker','.','Markersize',20,'Color','green');
+%     end
+
+    AJOUTER UNE ROTATION DE HANHCHE POUR RECALER LES MARQUEURS DU BASSIN
+    idem : translation centrée sur axe moyen hanche, puis rotation
+
+    % 8) Translation to common origin / ankle (supposed as the most 
+    %    repetable axis using anatomical palpation)
+    % ---------------------------------------------------------------------    
+    % Plot markers
+    fig = figure; hold on; axis equal; view(90,0);
+    for m = 1:nMarker
+        plot3(Markerc7.(markerNames{m})(:,1), ...
+              Markerc7.(markerNames{m})(:,2), ...
+              Markerc7.(markerNames{m})(:,3), ...
+              'Marker','.','Markersize',20,'Color','red');
+    end
+    % Select ankle lateral malleoli
+    disp('Click on right ankle lateral malleoli');
+    AnklePoints(1,:) = ginput3d(1);
+    disp('Click on left ankle lateral malleoli');
+    AnklePoints(2,:) = ginput3d(1);
+    % Identify markers
+    for k = 1:size(AnklePoints,1)
+        distance = 1e5;
+        for m = 1:nMarker
+            point1 = [0, ...
+                      Markerc7.(markerNames{m})(:,2), ...
+                      Markerc7.(markerNames{m})(:,3)];
+            point2 = AnklePoints(k,:);
+            if norm(point1-point2) < distance 
+                distance = norm(point1-point2);
+                AnkleMarker(k,:) = [Markerc7.(markerNames{m})(:,1), ...
+                                    Markerc7.(markerNames{m})(:,2), ...
+                                    Markerc7.(markerNames{m})(:,3)];   
+            end
+        end
+        plot3(AnkleMarker(k,1), ...
+              AnkleMarker(k,2), ...
+              AnkleMarker(k,3), ...
+              'Marker','.','Markersize',20,'Color','green');
+        pause(0.1);
+    end
+    close(fig);
+    % Translate the middle point of the lateral malleoli at the origin of 
+    % ICS
+    for m = 1:nMarker
+        Markerc8.(markerNames{m}) = Markerc7.(markerNames{m})-...
+                                    ([AnkleMarker(1,1),AnkleMarker(1,2),AnkleMarker(1,3)] + ...
+                                     [AnkleMarker(2,1),AnkleMarker(2,2),AnkleMarker(2,3)])/2;
+    end
+%     fig = figure; hold on; axis equal; view(90,0);
+%     for m = 1:nMarker
+%         plot3(Markerc7.(markerNames{m})(:,1), ...
+%               Markerc7.(markerNames{m})(:,2), ...
+%               Markerc7.(markerNames{m})(:,3), ...
+%               'Marker','.','Markersize',20,'Color','red');
+%         plot3(Markerc8.(markerNames{m})(:,1), ...
+%               Markerc8.(markerNames{m})(:,2), ...
+%               Markerc8.(markerNames{m})(:,3), ...
+%               'Marker','.','Markersize',20,'Color','green');
+%     end
+
+    % 9) Plot result
+    % --------------------------------------------------------------------- 
+    figComp;
+    for m = 1:nMarker
+        plot3(Markerc8.(markerNames{m})(:,1), ...
+              Markerc8.(markerNames{m})(:,2), ...
+              Markerc8.(markerNames{m})(:,3), ...
+              'Marker','.','Markersize',20,'Color',colorSet{i});
+    end
+end

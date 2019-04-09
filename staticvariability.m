@@ -1,13 +1,13 @@
 close all; clear all; clc;
-pathprin = 'Matlab static\';
+pathprin = 'C:\Users\florent.moissenet\Documents\Professionnel\routines\github\Static-Marker-Variability\data\';
 
 pat = dir(pathprin);
 pat(1:2) = [];
 npat = length(pat);
 nsession = 3;
-nmarkpelv = 6;
-nmarkmi = 7;
-nop = 2;
+nmarkpelv = 4;
+nmarkmi = 11;
+nop = 1;
 o1 = zeros(nsession, nmarkpelv + nmarkmi, 3, 2*npat);
 o2 = zeros(nsession, nmarkpelv + nmarkmi, 3, 2*npat);
 color = ['b'; 'r'; 'g'];
