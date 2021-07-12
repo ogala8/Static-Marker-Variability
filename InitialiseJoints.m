@@ -1,18 +1,14 @@
-% Author       : F. Moissenet
-%                Kinesiology Laboratory (K-LAB)
-%                University of Geneva
-%                https://www.unige.ch/medecine/kinesiology
+% Author       : Omar Galarraga
+%                Florent Moissenet
 % License      : Creative Commons Attribution-NonCommercial 4.0 International License 
 %                https://creativecommons.org/licenses/by-nc/4.0/legalcode
 % Source code  : https://github.com/fmoissenet/NSLBP-BIOToolbox
 % Reference    : To be defined
-% Date         : June 2020
+% Date         : July 2020
 % -------------------------------------------------------------------------
 % Description  : To be defined
-% Inputs       : To be defined
-% Outputs      : To be defined
 % -------------------------------------------------------------------------
-% Dependencies : None
+% Dependencies : To be defined
 % -------------------------------------------------------------------------
 % This work is licensed under the Creative Commons Attribution - 
 % NonCommercial 4.0 International License. To view a copy of this license, 

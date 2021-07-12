@@ -1,18 +1,14 @@
-% Author       : F. Moissenet
-%                Kinesiology Laboratory (K-LAB)
-%                University of Geneva
-%                https://www.unige.ch/medecine/kinesiology
+% Author       : Omar Galarraga
+%                Florent Moissenet
 % License      : Creative Commons Attribution-NonCommercial 4.0 International License 
 %                https://creativecommons.org/licenses/by-nc/4.0/legalcode
 % Source code  : https://github.com/fmoissenet/NSLBP-BIOToolbox
 % Reference    : To be defined
-% Date         : June 2020
+% Date         : July 2020
 % -------------------------------------------------------------------------
-% Description  : This routine aims to export C3D files with updated data.
-% Inputs       : To be defined
-% Outputs      : To be defined
+% Description  : To be defined
 % -------------------------------------------------------------------------
-% Dependencies : - Biomechanical Toolkit (BTK): https://github.com/Biomechanical-ToolKit/BTKCore
+% Dependencies : To be defined
 % -------------------------------------------------------------------------
 % This work is licensed under the Creative Commons Attribution - 
 % NonCommercial 4.0 International License. To view a copy of this license, 
@@ -58,44 +54,6 @@ if ~isempty(Trial.Vmarker)
             btkAppendPoint(btkFile,'marker',Trial.Vmarker(i).label,Trial.Vmarker(i).Trajectory.smooth);
         else
             btkAppendPoint(btkFile,'marker',Trial.Vmarker(i).label,zeros(Trial.n1,3));
-        end
-    end
-end
-
-% Append EMG signals
-if ~isempty(Trial.EMG)
-    for i = 1:size(Trial.EMG,2)
-        if ~isempty(Trial.EMG(i).Signal.filt)
-            btkAppendAnalog(btkFile,[Trial.EMG(i).label,'_raw'],Trial.EMG(i).Signal.filt,'EMG signal (mV)');
-        end
-    end
-end
-if ~isempty(Trial.EMG)
-    for i = 1:size(Trial.EMG,2)
-        if ~isempty(Trial.EMG(i).Signal.norm)
-            btkAppendAnalog(btkFile,Trial.EMG(i).label,Trial.EMG(i).Signal.norm,'EMG signal (normalised)');
-        else
-            btkAppendAnalog(btkFile,Trial.EMG(i).label,Trial.EMG(i).Signal.smooth,'EMG signal (mV)');
-        end
-    end
-end
-
-% Append GRF signals
-if ~isempty(Trial.GRF)
-    GRF     = btkGetGroundReactionWrenches(Trial.btk);
-    GRFmeta = btkGetMetaData(Trial.btk,'FORCE_PLATFORM');
-    for i = 1:size(GRF,1)
-        GRF(i).corners = GRFmeta.children.CORNERS.info.values(:,:,i)*1e-3;
-        GRF(i).origin  = GRFmeta.children.ORIGIN.info.values(:,i)*1e-3;
-        Trial.GRF(i).Signal.M.smooth = Trial.GRF(i).Signal.M.smooth;
-        if ~isempty(Trial.GRF(i).Signal.F.smooth)
-            btkAppendForcePlatformType2(btkFile,tGRF(i).F,...
-                                        tGRF(i).M,...
-                                        GRF(i).corners',GRF(i).origin',[0,0,0]);
-        else
-            btkAppendForcePlatformType2(btkFile,zeros(size(GRF(1).F)),...
-                                        zeros(size(GRF(1).M)),...
-                                        GRF(i).corners',GRF(i).origin',[0,0,0]);
         end
     end
 end
