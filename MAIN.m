@@ -29,8 +29,6 @@ clc;
 disp('Set folders');
 Folder.toolbox      = 'C:\Users\moissene\Documents\Switchdrive\Projets\SOFAMEA - Static marker variability\Static-Marker-Variability\';
 Folder.data         = 'C:\Users\moissene\Documents\Professionnel\publications\articles\1- en cours\Galarraga - 2021\Data\';
-Folder.biomarkers   = 'C:\Users\moissene\Documents\Professionnel\projets recherche\2019 - NSCLBP - Biomarkers\Données\NSLBP-BIO_Toolbox\data\';
-Folder.export       = [Folder.data,'\output\'];
 Folder.dependencies = [Folder.toolbox,'dependencies\'];
 addpath(Folder.toolbox);
 addpath(genpath(Folder.dependencies));

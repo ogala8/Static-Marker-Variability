@@ -131,5 +131,5 @@ info.values(1:nData) = {Session.date Session.type Session.examiner ...
 btkAppendMetaData(btkFile,'SESSION','VALUES',info);
 
 % Export C3D file
-cd(Folder.export);
+cd([Folder.data,'output\']);
 btkWriteAcquisition(btkFile,[regexprep(Trial.file,'.c3d',''),'_processed.c3d']);
