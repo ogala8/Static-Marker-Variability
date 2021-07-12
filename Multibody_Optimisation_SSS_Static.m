@@ -27,9 +27,9 @@ test = Segment(2);
 
 if ~isfield(test,'nM')
 
-    %% ------------------------------------------------------------------------
+    %% --------------------------------------------------------------------
     % Model parameters
-    % -------------------------------------------------------------------------
+    % ---------------------------------------------------------------------
 
     % Initialisation
     Segment(1).L = NaN; % No value for segment 1 (Forceplate)
@@ -38,7 +38,7 @@ if ~isfield(test,'nM')
     Segment(1).gamma = NaN; % No value for segment 1 (Forceplate)
 
     % Mean segment geometry and markers coordinates
-    for i = 2:5 % From i = 2 (Foot) to i = 5 (Pelvis)
+    for i = 2:8 % From i = 2 (Right foot) to i = 8 (Left foot)
 
         % Segment length
         Segment(i).L = mean(sqrt(sum((Segment(i).Q(4:6,1,:) - ...
@@ -87,15 +87,19 @@ end
 
 if isfield(test,'nM')
 
-    %% ------------------------------------------------------------------------
+    %% --------------------------------------------------------------------
     % Joint parameters and initial guess
-    % -------------------------------------------------------------------------
+    % ---------------------------------------------------------------------
 
     % Initial guess for Lagrange multipliers
-    lambdakA = zeros(3,1,n);
-    lambdakK = zeros(3,1,n);
+    lambdakRA = zeros(3,1,n);
+    lambdakRK = zeros(3,1,n);
+    lambdakRH = zeros(3,1,n);
+    lambdakLH = zeros(3,1,n);
+    lambdakLK = zeros(3,1,n);
+    lambdakLA = zeros(3,1,n);
 
-    % Hip virtual marker mean coordinates (rV1 = rP4)
+    % Right hip virtual marker mean coordinates (rV1 = rP4)
     % Expressed in  in (u5, rP5-rD5, w5)
     Segment(5).nV(:,1) = mean(Vnop_array3(...
         Segment(4).Q(4:6,1,:) - Segment(5).Q(4:6,1,:),...
@@ -107,23 +111,34 @@ if isfield(test,'nM')
         (1 + Segment(5).nV(2,1))*eye(3), ...
         - Segment(5).nV(2,1)*eye(3), ...
         Segment(5).nV(3,1)*eye(3)];
-    % Initial guess for Lagrange multipliers
-    lambdakH = zeros(3,1,n);
+
+    % Left hip virtual marker mean coordinates (rV2 = rD6)
+    % Expressed in  in (u5, rP5-rD5, w5)
+    Segment(5).nV(:,2) = mean(Vnop_array3(...
+        Segment(6).Q(7:9,1,:) - Segment(5).Q(4:6,1,:),...
+        Segment(5).Q(1:3,1,:),...
+        Segment(5).Q(4:6,1,:) - Segment(5).Q(7:9,1,:),...
+        Segment(5).Q(10:12,1,:)),3);
+    % Interpolation matrices
+    NV25 = [Segment(5).nV(1,2)*eye(3),...
+        (1 + Segment(5).nV(2,2))*eye(3), ...
+        - Segment(5).nV(2,2)*eye(3), ...
+        Segment(5).nV(3,2)*eye(3)];
 
 
-    %% ------------------------------------------------------------------------
+    %% --------------------------------------------------------------------
     % Run optimisation
-    % -------------------------------------------------------------------------
+    % ---------------------------------------------------------------------
 
     % Initial guess for Lagrange multipliers
-    lambdar = zeros(24,1,n); % 4 segments x 6 constraints per segment
+    lambdar = zeros(7*6,1,n); % 7 segments x 6 constraints per segment
 
     % Initial value of the objective function
     F = 1;
     % Iteration number
     step = 0;
 
-    % -------------------------------------------------------------------------
+    % ---------------------------------------------------------------------
     % Newton-Raphson
     while max(permute(sqrt(sum(F.^2)),[3,2,1])) > 10e-12 && step < 20
 
@@ -139,56 +154,100 @@ if isfield(test,'nM')
         phim = []; % Vector of driving constraints
         Km = []; % Jacobian of driving constraints
 
-        % Ankle
+        % Right ankle
         % Vector of kinematic constraints
         % rD3 - rP2 = 0
-        phikA = Segment(3).Q(7:9,1,:) - Segment(2).Q(4:6,1,:);
+        phikRA = Segment(3).Q(7:9,1,:) - Segment(2).Q(4:6,1,:);
         % Jacobian of kinematic constraints
-        KkA = zeros(3,4*12,n); % Initialisation
-        KkA(1:3,4:6,:) = repmat(-eye(3),[1,1,n]);
-        KkA(1:3,19:21,:) = repmat(eye(3),[1,1,n]);
+        KkRA = zeros(3,7*12,n); % Initialisation
+        KkRA(1:3,4:6,:) = repmat(-eye(3),[1,1,n]);
+        KkRA(1:3,19:21,:) = repmat(eye(3),[1,1,n]);
         % Joint structure
-        Joint(2).Kk = KkA;
+        Joint(2).Kk = KkRA;
         % Partial derivative of Jacobian * Lagrange multipliers
-        dKlambdakAdQ = zeros(4*12,4*12,n);
+        dKlambdakRAdQ = zeros(7*12,7*12,n);
 
-        % Knee
+        % Right knee
         % Vector of kinematic constraints
         % rD4 - rP3 = 0
-        phikK = Segment(4).Q(7:9,1,:) - Segment(3).Q(4:6,1,:);
+        phikRK = Segment(4).Q(7:9,1,:) - Segment(3).Q(4:6,1,:);
         % Jacobian of kinematic constraints
-        KkK = zeros(3,4*12,n); % Initialisation
-        KkK(1:3,16:18,:) = repmat(-eye(3),[1,1,n]);
-        KkK(1:3,31:33,:) = repmat(eye(3),[1,1,n]);
+        KkRK = zeros(3,7*12,n); % Initialisation
+        KkRK(1:3,16:18,:) = repmat(-eye(3),[1,1,n]);
+        KkRK(1:3,31:33,:) = repmat(eye(3),[1,1,n]);
         % Joint structure
-        Joint(3).Kk = KkK;
+        Joint(3).Kk = KkRK;
         % Partial derivative of Jacobian * Lagrange multipliers
-        dKlambdakKdQ = zeros(4*12,4*12,n);
+        dKlambdakRKdQ = zeros(7*12,7*12,n);
 
-        % Hip
+        % Right hip
         % Vector of kinematic constraints
         % rV15 - rP4 = 0
-        phikH = Mprod_array3(repmat(NV15,[1,1,n]),Segment(5).Q) - ...
+        phikRH = Mprod_array3(repmat(NV15,[1,1,n]),Segment(5).Q) - ...
             Segment(4).Q(4:6,1,:);
         % Jacobian of kinematic constraints
-        KkH = zeros(3,4*12,n); % Initialisation
-        KkH(1:3,28:30,:) = repmat(-eye(3),[1,1,n]);
-        KkH(1:3,37:48,:) = repmat(NV15,[1,1,n]);
+        KkRH = zeros(3,7*12,n); % Initialisation
+        KkRH(1:3,28:30,:) = repmat(-eye(3),[1,1,n]);
+        KkRH(1:3,37:48,:) = repmat(NV15,[1,1,n]);
         % Joint structure
-        Joint(4).Kk = KkH;
+        Joint(4).Kk = KkRH;
         % Partial derivative of Jacobian * Lagrange multipliers
-        dKlambdakHdQ = zeros(4*12,4*12,n); % Initialisation
+        dKlambdakRHdQ = zeros(7*12,7*12,n); % Initialisation
+
+        % Left hip
+        % Vector of kinematic constraints
+        % rV15 - rD6 = 0
+        phikLH = Mprod_array3(repmat(NV25,[1,1,n]),Segment(5).Q) - ...
+            Segment(6).Q(7:9,1,:);
+        % Jacobian of kinematic constraints
+        KkLH = zeros(3,7*12,n); % Initialisation
+        KkLH(1:3,43:45,:) = repmat(-eye(3),[1,1,n]);
+        KkLH(1:3,37:48,:) = repmat(NV25,[1,1,n]);
+        % Joint structure
+        Joint(5).Kk = KkLH;
+        % Partial derivative of Jacobian * Lagrange multipliers
+        dKlambdakLHdQ = zeros(7*12,7*12,n); % Initialisation
+
+        % Left knee
+        % Vector of kinematic constraints
+        % rP6 - rD7 = 0
+        phikLK = Segment(6).Q(4:6,1,:) - Segment(7).Q(7:9,1,:);
+        % Jacobian of kinematic constraints
+        KkLK = zeros(3,7*12,n); % Initialisation
+        KkLK(1:3,67:69,:) = repmat(-eye(3),[1,1,n]);
+        KkLK(1:3,52:54,:) = repmat(eye(3),[1,1,n]);
+        % Joint structure
+        Joint(6).Kk = KkLK;
+        % Partial derivative of Jacobian * Lagrange multipliers
+        dKlambdakLKdQ = zeros(7*12,7*12,n);
+
+        % Left ankle
+        % Vector of kinematic constraints
+        % rP7 - rD8 = 0
+        phikLA = Segment(7).Q(4:6,1,:) - Segment(8).Q(7:9,1,:);
+        % Jacobian of kinematic constraints
+        KkLA = zeros(3,7*12,n); % Initialisation
+        KkLA(1:3,79:81,:) = repmat(-eye(3),[1,1,n]);
+        KkLA(1:3,64:66,:) = repmat(eye(3),[1,1,n]);
+        % Joint structure
+        Joint(7).Kk = KkLA;
+        % Partial derivative of Jacobian * Lagrange multipliers
+        dKlambdakLAdQ = zeros(7*12,7*12,n);
 
        % Assembly
-        phik = [phikA;phikK;phikH];
-        Kk = [KkA;KkK;KkH];
-        lambdak = [lambdakA;lambdakK;lambdakH];
-        dKlambdakdQ = dKlambdakAdQ + dKlambdakKdQ + dKlambdakHdQ;
+        phik = [phikRA;phikRK;phikRH;...
+                phikLH;phikLK;phikLA];
+        Kk = [KkRA;KkRK;KkRH;...
+              KkLH;KkLK;KkLA];
+        lambdak = [lambdakRA;lambdakRK;lambdakRH;...
+                   lambdakLH;lambdakLK;lambdakLA];
+        dKlambdakdQ = dKlambdakRAdQ+dKlambdakRKdQ+dKlambdakRHdQ+...
+                      dKlambdakLHdQ+dKlambdakLKdQ+dKlambdakLAdQ;
 
 
-        % ---------------------------------------------------------------------
+        % -----------------------------------------------------------------
         % Rigid body constraints and driving constraints
-        for i = 2:5 % From i = 2 (Foot) to i = 5 (Pelvis)
+        for i = 2:8 % From i = 2 (Right foot) to i = 8 (Left foot)
 
             % Vector of rigid body constraints
             ui = Segment(i).Q(1:3,1,:);
@@ -202,7 +261,7 @@ if isfield(test,'nM')
                 dot(wi,wi) - ones(1,1,n)];
 
             % Jacobian of rigid body constraints
-            Kri = zeros(6,4*12,n); % Initialisation
+            Kri = zeros(6,7*12,n); % Initialisation
             Kri(1:6,(i-2)*12+1:(i-2)*12+12,:) = permute(...
                 [    2*ui,       vi,           wi,     zeros(3,1,n),zeros(3,1,n),zeros(3,1,n); ...
                 zeros(3,1,n),    ui,      zeros(3,1,n),    2*vi,         wi,     zeros(3,1,n); ...
@@ -213,7 +272,7 @@ if isfield(test,'nM')
             Segment(i).Kr = Kri;
 
             % Partial derivative of Jacobian * Lagrange multipliers
-            dKlambdaridQ = zeros(12,4*12,n); % Initialisation
+            dKlambdaridQ = zeros(12,7*12,n); % Initialisation
             lambdari = lambdar((i-2)*6+1:(i-2)*6+6,1,:); % Extraction
             dKlambdaridQ(1:12,(i-2)*12+1:(i-2)*12+12,:) = ...
                 [Mprod_array3(lambdari(1,1,:),repmat(2*eye(3),[1,1,n])), ...
@@ -234,7 +293,7 @@ if isfield(test,'nM')
                 Mprod_array3(lambdari(6,1,:),repmat(2*eye(3),[1,1,n]))];
 
             % Vector and Jacobian of driving constraints
-            Kmi = zeros(size(Segment(i).rM,2)*3,4*12,n); % Initialisation
+            Kmi = zeros(size(Segment(i).rM,2)*3,7*12,n); % Initialisation
             phimi = []; % Initialisation
             for j = 1:size(Segment(i).rM,2)
                 % Interpolation matrix
@@ -265,7 +324,7 @@ if isfield(test,'nM')
         Mean_phim = mean(Mprod_array3(permute(phim,[2,1,3]),phim),3)
 
 
-        % ---------------------------------------------------------------------
+        % -----------------------------------------------------------------
         % Solution
 
         % Compute dX
@@ -282,17 +341,23 @@ if isfield(test,'nM')
         dX = Mprod_array3(Minv_array3(-dFdX),F);
 
 
-        % ---------------------------------------------------------------------
+        % -----------------------------------------------------------------
         % Extraction from X
         Segment(2).Q = Segment(2).Q + dX(1:12,1,:);
         Segment(3).Q = Segment(3).Q + dX(13:24,1,:);
         Segment(4).Q = Segment(4).Q + dX(25:36,1,:);
         Segment(5).Q = Segment(5).Q + dX(37:48,1,:);
+        Segment(6).Q = Segment(6).Q + dX(49:60,1,:);
+        Segment(7).Q = Segment(7).Q + dX(61:72,1,:);
+        Segment(8).Q = Segment(8).Q + dX(73:84,1,:);
 
-        lambdakA = lambdakA + dX(49:51,1,:);
-        lambdakK = lambdakK + dX(52:54,1,:);
-        lambdakH = lambdakH + dX(55:57,1,:);
-        lambdar = lambdar + dX(58:81,1,:);
+        lambdakRA = lambdakRA + dX(85:87,1,:);
+        lambdakRK = lambdakRK + dX(88:90,1,:);
+        lambdakRH = lambdakRH + dX(91:93,1,:);
+        lambdakLH = lambdakLH + dX(94:96,1,:);
+        lambdakLK = lambdakLK + dX(97:99,1,:);
+        lambdakLA = lambdakLK + dX(100:102,1,:);
+        lambdar = lambdar + dX(103:144,1,:);
 
     end
     

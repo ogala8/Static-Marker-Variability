@@ -164,7 +164,7 @@ Segment = Multibody_Optimisation_SSS_Static(Segment);
 % -------------------------------------------------------------------------
 
 % Define the Static to be used as measured marker position
-iStatic = 10;
+iStatic = 8;
 
 % Prepare the Segment structure used to define the global marker position
 % based on Static 2
@@ -189,7 +189,7 @@ Segment = Multibody_Optimisation_SSS_Static(Segment);
 % PLOT RESULTS
 % -------------------------------------------------------------------------
 figure;
-for i = 2:5
+for i = 2:8
     for j = 1:size(Segment(i).rM,2)
         NMij = [Segment(i).nM(1,j)*eye(3),...
             (1 + Segment(i).nM(2,j))*eye(3), ...
