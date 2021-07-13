@@ -137,6 +137,14 @@ if isfield(test,'nM')
     F = 1;
     % Iteration number
     step = 0;
+    
+    % Optimisation weights for marker trajectories
+    temp = [];
+    for i = 2:8
+        temp = [temp,repmat(Segment(i).wM,[1,3])];
+    end
+    Wm = diag(temp);
+    clear temp;
 
     % ---------------------------------------------------------------------
     % Newton-Raphson
@@ -331,11 +339,11 @@ if isfield(test,'nM')
         % dX = inv(-dF/dx)*F(X)
         % F(X) = [Km'*phim + [Kk;Kr]'*[lambdak;lambdar];[phik;phir]]
         % X = [Q;[lambdak;lambdar]]
-        F = [Mprod_array3(permute(Km,[2,1,3]),phim) + ...
+        F = [Mprod_array3(permute(Km,[2,1,3]),Mprod_array3(Wm,phim)) + ...
             Mprod_array3(permute([Kk;Kr],[2,1,3]), [lambdak;lambdar]); ...
             [phik;phir]]; % with transpose = permute( ,[2,1,3])
         dKlambdadQ = dKlambdakdQ + dKlambdardQ;
-        dFdX = [Mprod_array3(permute(Km,[2,1,3]),Km) + ...
+        dFdX = [Mprod_array3(permute(Km,[2,1,3]),Mprod_array3(Wm,Km)) + ...
             dKlambdadQ, permute([Kk;Kr],[2,1,3]); ...
             [Kk;Kr],zeros(size([Kk;Kr],1),size([Kk;Kr],1),n)];
         dX = Mprod_array3(Minv_array3(-dFdX),F);

@@ -27,6 +27,9 @@ markerSet = {'RASI','RPSI','LPSI','LASI',...
              'LFAX','LTTA','LTIAP','LTIAD','LTIB1','LTIB2','LANK','LMED',...
              'LHEE','LTOE','LFMH','LSMH','LVMH'};
          
+% Set IK weights
+IKweight    = ones(size(markerSet));
+         
 % Set landmark type
 % 'landmark' is a marker related to a rigid body
 % 'semi-landmark' is a marker related to a curve
@@ -66,6 +69,7 @@ Trial.Marker = [];
 for i = 1:length(markerSet)
     Trial.Marker(i).label                 = markerSet{i};
     Trial.Marker(i).type                  = landmarkList{i};
+    Trial.Marker(i).IKweight              = IKweight(i);
     Trial.Marker(i).Body.Segment.label    = segmentList{i};
     Trial.Marker(i).Body.Curve.label      = curveList{i*2-1};
     Trial.Marker(i).Body.Curve.index      = curveList{i*2};

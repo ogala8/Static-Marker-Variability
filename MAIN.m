@@ -37,17 +37,17 @@ addpath(genpath(Folder.dependencies));
 % DEFINE PARTICIPANT
 % -------------------------------------------------------------------------
 disp('Set participant parameters');
-Participant.id           = '';
+Participant.id           = 'Oscar';
 Participant.type         = '';
 Participant.gender       = 'Male'; % Female / Male
 Participant.inclusionAge = NaN; % years
-Participant.pelvisWidth  = NaN; % m
-Participant.RLegLength   = NaN; % m
-Participant.LLegLength   = NaN; % m
-Participant.RKneeWidth   = NaN; % m
-Participant.LKneeWidth   = NaN; % m
-Participant.RAnkleWidth  = NaN; % m
-Participant.LAnkleWidth  = NaN; % m
+Participant.pelvisWidth  = 0.245; % m
+Participant.RLegLength   = 0.67; % m
+Participant.LLegLength   = 0.675; % m
+Participant.RKneeWidth   = 0.085; % m
+Participant.LKneeWidth   = 0.08; % m
+Participant.RAnkleWidth  = 0.065; % m
+Participant.LAnkleWidth  = 0.07; % m
 
 % -------------------------------------------------------------------------
 % DEFINE SESSION
@@ -124,7 +124,7 @@ for i = 1:size(Static,2)
     Static(i)         = InitialiseSegments(Static(i));
     Static(i)         = InitialiseJoints(Static(i));
     Static(i)         = ProcessMarkerTrajectories([],Static(i));
-    Static(i)         = DefineSegments_ISB(Participant,[],Static(i));
+    Static(i)         = DefineSegments_CGM24(Session,Participant,[],Static(i));
     clear Marker;
     
     % Store processed static data in a new C3D file
@@ -137,13 +137,14 @@ end
 % -------------------------------------------------------------------------
 
 % Define the Static to be used as measured marker position
-iStatic = 6;
+iStatic = 10;
 
 % Prepare the Segment structure used to define the local marker position
 % based on Static 1
 for i = 1:5
     Segment(i).Q   = Static(iStatic).Segment(i).Q.smooth;
     Segment(i).rM  = Static(iStatic).Segment(i).rM.smooth;
+    Segment(i).wM  = Static(iStatic).Segment(i).wM;
     Segment(i).rM0 = Static(iStatic).Segment(i).rM.smooth; % Store as initial posture before correction
 end
 j = 6;
@@ -152,6 +153,7 @@ for i = 9:-1:7
     Segment(j).Q(4:6,:,:) = Static(iStatic).Segment(i).Q.smooth(7:9,:,:); % Exchange rP and rD to get a continuous kinematic chain from right foot to left foot
     Segment(j).Q(7:9,:,:) = Static(iStatic).Segment(i).Q.smooth(4:6,:,:);
     Segment(j).rM         = Static(iStatic).Segment(i).rM.smooth;
+    Segment(j).wM         = Static(iStatic).Segment(i).wM;
     Segment(j).rM0        = Static(iStatic).Segment(i).rM.smooth; % Store as initial posture before correction
     j                     = j+1;
 end
@@ -164,7 +166,7 @@ Segment = Multibody_Optimisation_SSS_Static(Segment);
 % -------------------------------------------------------------------------
 
 % Define the Static to be used as measured marker position
-iStatic = 8;
+iStatic = 11;
 
 % Prepare the Segment structure used to define the global marker position
 % based on Static 2
@@ -208,3 +210,6 @@ for i = 2:8
         error(:,j,i) = Segment(i).rM2(:,j)-Segment(i).rM(:,j);
     end
 end
+disp(['Mean error (mm): ',num2str(1e3*mean(abs(error(:))))]);
+disp(['Std error (mm): ',num2str(1e3*std(abs(error(:))))]);
+disp(['Max error (mm): ',num2str(1e3*max(abs(error(:))))]);

@@ -16,7 +16,7 @@
 % Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
 % -------------------------------------------------------------------------
 
-function Trial = DefineSegments_ISB(Participant,Static,Trial)
+function Trial = DefineSegments_ISB(Session,Participant,Static,Trial)
 
 % -------------------------------------------------------------------------
 % Pelvis parameters
@@ -91,6 +91,10 @@ u5                          = X5;
 Trial.Segment(5).Q.smooth   = [u5;rP5;rD5;w5];
 Trial.Segment(5).rM.smooth  = [RASI,LASI,RPSI,LPSI];
 Trial.Segment(5).rM.label   = {'RASI','LASI','RPSI','LPSI'};
+Trial.Segment(5).wM         = [Trial.Marker(1).IKweight,...
+                               Trial.Marker(2).IKweight,...
+                               Trial.Marker(3).IKweight,...
+                               Trial.Marker(4).IKweight];
 
 % -------------------------------------------------------------------------
 % Right femur parameters
@@ -123,6 +127,9 @@ u4                         = X4;
 Trial.Segment(4).Q.smooth  = [u4;rP4;rD4;w4];
 Trial.Segment(4).rM.smooth = [RGTR,RKNE,RKNM];
 Trial.Segment(4).rM.label  = {'RGTR','RKNE','RKNM'};
+Trial.Segment(4).wM        = [Trial.Marker(5).IKweight,...
+                               Trial.Marker(10).IKweight,...
+                               Trial.Marker(11).IKweight];
 
 % -------------------------------------------------------------------------
 % Right Tibia/fibula parameters
@@ -158,8 +165,12 @@ rD3                        = RAJC;
 w3                         = Z3;
 u3                         = X3;
 Trial.Segment(3).Q.smooth  = [u3;rP3;rD3;w3];
-Trial.Segment(3).rM.smooth = [RFAX,RTTA,RANK,RMED]; % Not sure about constant orientation of RTIB
+Trial.Segment(3).rM.smooth = [RFAX,RTTA,RANK,RMED];
 Trial.Segment(3).rM.label  = {'RFAX','RTTA','RANK','RMED'};
+Trial.Segment(3).wM        = [Trial.Marker(12).IKweight,...
+                               Trial.Marker(13).IKweight,...
+                               Trial.Marker(18).IKweight,...
+                               Trial.Marker(19).IKweight];
 
 % -------------------------------------------------------------------------
 % Right foot parameters
@@ -192,6 +203,9 @@ u2                         = X2;
 Trial.Segment(2).Q.smooth  = [u2;rP2;rD2;w2];
 Trial.Segment(2).rM.smooth = [RHEE,RFMH,RVMH];
 Trial.Segment(2).rM.label  = {'RHEE','RFMH','RVMH'};
+Trial.Segment(2).wM        = [Trial.Marker(20).IKweight,...
+                               Trial.Marker(22).IKweight,...
+                               Trial.Marker(24).IKweight];
 
 % -------------------------------------------------------------------------
 % Left femur parameters
@@ -224,6 +238,9 @@ u9                         = X9;
 Trial.Segment(9).Q.smooth  = [u9;rP9;rD9;w9];
 Trial.Segment(9).rM.smooth = [LGTR,LKNE,LKNM];
 Trial.Segment(9).rM.label  = {'LGTR','LKNE','LKNM'};
+Trial.Segment(9).wM        = [Trial.Marker(25).IKweight,...
+                              Trial.Marker(30).IKweight,...
+                              Trial.Marker(31).IKweight];
 
 % -------------------------------------------------------------------------
 % Left Tibia/fibula parameters
@@ -261,6 +278,10 @@ u8                         = X8;
 Trial.Segment(8).Q.smooth  = [u8;rP8;rD8;w8];
 Trial.Segment(8).rM.smooth = [LFAX,LTTA,LANK,LMED];
 Trial.Segment(8).rM.label  = {'LFAX','LTTA','LANK','LMED'};
+Trial.Segment(8).wM        = [Trial.Marker(32).IKweight,...
+                               Trial.Marker(33).IKweight,...
+                               Trial.Marker(38).IKweight,...
+                               Trial.Marker(39).IKweight];
 
 % -------------------------------------------------------------------------
 % Left foot parameters
@@ -293,3 +314,6 @@ u7                         = X7;
 Trial.Segment(7).Q.smooth  = [u7;rP7;rD7;w7];
 Trial.Segment(7).rM.smooth = [LHEE,LFMH,LVMH];
 Trial.Segment(7).rM.label  = {'LHEE','LFMH','LVMH'};
+Trial.Segment(7).wM        = [Trial.Marker(40).IKweight,...
+                               Trial.Marker(42).IKweight,...
+                               Trial.Marker(44).IKweight];
