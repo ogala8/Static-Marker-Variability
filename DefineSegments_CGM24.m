@@ -2,9 +2,9 @@
 %                Florent Moissenet
 % License      : Creative Commons Attribution-NonCommercial 4.0 International License 
 %                https://creativecommons.org/licenses/by-nc/4.0/legalcode
-% Source code  : https://github.com/fmoissenet/NSLBP-BIOToolbox
+% Source code  : https://github.com/ogala8/Static-Marker-Variability
 % Reference    : To be defined
-% Date         : July 2020
+% Date         : July 2021
 % -------------------------------------------------------------------------
 % Description  : To be defined
 % -------------------------------------------------------------------------
@@ -51,11 +51,11 @@ Trial.Vmarker(9).label             = 'LJC';
 Trial.Vmarker(9).Trajectory.smooth = permute(LJC,[3,1,2]); 
 % Determination of the hip joint centre by regression (Hara et al. 2016)
 RHJC(1:3,1,1) = [X5 Y5 Z5]*[(11-0.063*Participant.RLegLength*1e3)*1e-3; ...
-                (-9-0.078*Participant.RLegLength*1e3)*1e-3; ...
-                -(8+0.086*Participant.RLegLength*1e3)*1e-3]+(RASI+LASI)/2;
+                            (-9-0.078*Participant.RLegLength*1e3)*1e-3; ...
+                            -(8+0.086*Participant.RLegLength*1e3)*1e-3]+(RASI+LASI)/2;
 LHJC(1:3,1,1) = [X5 Y5 Z5]*[(11-0.063*Participant.LLegLength*1e3)*1e-3; ...
-                (-9-0.078*Participant.LLegLength*1e3)*1e-3; ...
-                (8+0.086*Participant.LLegLength*1e3)*1e-3]+(RASI+LASI)/2;
+                            (-9-0.078*Participant.LLegLength*1e3)*1e-3; ...
+                            (8+0.086*Participant.LLegLength*1e3)*1e-3]+(RASI+LASI)/2;
 % Store virtual markers
 Trial.Vmarker(4).label              = 'RHJC';
 Trial.Vmarker(4).Trajectory.smooth  = permute(RHJC,[3,1,2]);  
@@ -90,12 +90,12 @@ Trial.Segment(5).wM         = [Trial.Marker(1).IKweight,...
 % Extract marker trajectories
 RTHAP = permute(Trial.Marker(6).Trajectory.smooth,[2,3,1]);
 RTHAD = permute(Trial.Marker(7).Trajectory.smooth,[2,3,1]);
-RTHI2 = permute(Trial.Marker(8).Trajectory.smooth,[2,3,1]); % Oscar 8 (THI1), other 9 (THI2)
+RTHI2 = permute(Trial.Marker(9).Trajectory.smooth,[2,3,1]);
 RKNE  = permute(Trial.Marker(10).Trajectory.smooth,[2,3,1]);
 RKNM  = permute(Trial.Marker(11).Trajectory.smooth,[2,3,1]);
 % Knee joint centre
 RHJC2  = Trial.Vmarker(4).Trajectory.smooth;
-RTHI22 = Trial.Marker(8).Trajectory.smooth; % Oscar 8 (THI1), other 9 (THI2)
+RTHI22 = Trial.Marker(9).Trajectory.smooth;
 RKNE2  = Trial.Marker(10).Trajectory.smooth;
 RKJC   = chord_func(RHJC2,RTHI22,RKNE2,Participant.RKneeWidth,Session.markerHeight)';
 % Store virtual marker
@@ -119,12 +119,12 @@ w4                         = Z4;
 u4                         = X4;
 Trial.Segment(4).Q.smooth  = [u4;rP4;rD4;w4];
 Trial.Segment(4).rM.smooth = [RTHI2,RKNE,RKNM,RTHAP,RTHAD];
-Trial.Segment(4).rM.label  = {'RTHI','RKNE','RKNM','RTHAP','RTHAD'};
-Trial.Segment(4).wM        = [Trial.Marker(6).IKweight,...
-                              Trial.Marker(7).IKweight,...
-                              Trial.Marker(9).IKweight,...
+Trial.Segment(4).rM.label  = {'RTHI2','RKNE','RKNM','RTHAP','RTHAD'};
+Trial.Segment(4).wM        = [Trial.Marker(9).IKweight,...
                               Trial.Marker(10).IKweight,...
-                              Trial.Marker(11).IKweight];
+                              Trial.Marker(11).IKweight,...
+                              Trial.Marker(6).IKweight,...
+                              Trial.Marker(7).IKweight];
 
 % -------------------------------------------------------------------------
 % Right Tibia/fibula parameters
@@ -132,12 +132,12 @@ Trial.Segment(4).wM        = [Trial.Marker(6).IKweight,...
 % Extract marker trajectories
 RTIAP = permute(Trial.Marker(14).Trajectory.smooth,[2,3,1]);
 RTIAD = permute(Trial.Marker(15).Trajectory.smooth,[2,3,1]);
-RTIB2  = permute(Trial.Marker(16).Trajectory.smooth,[2,3,1]); % Oscar 16 (TIB1), other 17 (TIB2)
+RTIB2 = permute(Trial.Marker(17).Trajectory.smooth,[2,3,1]);
 RANK  = permute(Trial.Marker(18).Trajectory.smooth,[2,3,1]);
 RMED  = permute(Trial.Marker(19).Trajectory.smooth,[2,3,1]);
 % Ankle joint centre
 RKJC2  = Trial.Vmarker(3).Trajectory.smooth;
-RTIB22 = Trial.Marker(16).Trajectory.smooth; % Oscar 16 (TIB1), other 17 (TIB2)
+RTIB22 = Trial.Marker(17).Trajectory.smooth;
 RANK2  = Trial.Marker(18).Trajectory.smooth;
 RAJC   = chord_func(RKJC2,RTIB22,RANK2,Participant.RAnkleWidth,Session.markerHeight)';
 % Store virtual marker
@@ -204,8 +204,8 @@ Trial.Segment(2).rM.label  = {'RHEE','RTOE','RFMH','RVMH','RSMH'};
 Trial.Segment(2).wM        = [Trial.Marker(20).IKweight,...
                               Trial.Marker(21).IKweight,...
                               Trial.Marker(22).IKweight,...
-                              Trial.Marker(23).IKweight,...
-                              Trial.Marker(24).IKweight];
+                              Trial.Marker(24).IKweight,...
+                              Trial.Marker(23).IKweight];
 
 % -------------------------------------------------------------------------
 % Left femur parameters
@@ -213,12 +213,12 @@ Trial.Segment(2).wM        = [Trial.Marker(20).IKweight,...
 % Extract marker trajectories
 LTHAP = permute(Trial.Marker(26).Trajectory.smooth,[2,3,1]);
 LTHAD = permute(Trial.Marker(27).Trajectory.smooth,[2,3,1]);
-LTHI2 = permute(Trial.Marker(28).Trajectory.smooth,[2,3,1]); % Oscar 28 (THI1), other 29 (THI2)
+LTHI2 = permute(Trial.Marker(29).Trajectory.smooth,[2,3,1]);
 LKNE  = permute(Trial.Marker(30).Trajectory.smooth,[2,3,1]);
 LKNM  = permute(Trial.Marker(31).Trajectory.smooth,[2,3,1]);
 % Knee joint centre
 LHJC2  = Trial.Vmarker(8).Trajectory.smooth;
-LTHI22 = Trial.Marker(28).Trajectory.smooth; % Oscar 28 (THI1), other 29 (THI2)
+LTHI22 = Trial.Marker(29).Trajectory.smooth;
 LKNE2  = Trial.Marker(30).Trajectory.smooth;
 LKJC   = chord_func(LHJC2,LTHI22,LKNE2,Participant.LKneeWidth,Session.markerHeight)';
 % Store virtual marker
@@ -242,12 +242,12 @@ w9                         = Z9;
 u9                         = X9;
 Trial.Segment(9).Q.smooth  = [u9;rP9;rD9;w9];
 Trial.Segment(9).rM.smooth = [LTHI2,LKNE,LKNM,LTHAP,LTHAD];
-Trial.Segment(9).rM.label  = {'LTHI','LKNE','LKNM','LTHAP','LTHAD'};
-Trial.Segment(9).wM        = [Trial.Marker(26).IKweight,...
-                              Trial.Marker(27).IKweight,...
-                              Trial.Marker(29).IKweight,...
+Trial.Segment(9).rM.label  = {'LTHI2','LKNE','LKNM','LTHAP','LTHAD'};
+Trial.Segment(9).wM        = [Trial.Marker(29).IKweight,...
                               Trial.Marker(30).IKweight,...
-                              Trial.Marker(31).IKweight];
+                              Trial.Marker(31).IKweight,...
+                              Trial.Marker(26).IKweight,...
+                              Trial.Marker(27).IKweight];
 
 % -------------------------------------------------------------------------
 % Left Tibia/fibula parameters
@@ -255,12 +255,12 @@ Trial.Segment(9).wM        = [Trial.Marker(26).IKweight,...
 % Extract marker trajectories
 LTIAP = permute(Trial.Marker(34).Trajectory.smooth,[2,3,1]);
 LTIAD = permute(Trial.Marker(35).Trajectory.smooth,[2,3,1]);
-LTIB2 = permute(Trial.Marker(36).Trajectory.smooth,[2,3,1]); % Oscar 36 (TIB1), other 37 (TIB2)
+LTIB2 = permute(Trial.Marker(37).Trajectory.smooth,[2,3,1]);
 LANK  = permute(Trial.Marker(38).Trajectory.smooth,[2,3,1]);
 LMED  = permute(Trial.Marker(39).Trajectory.smooth,[2,3,1]);
 % Ankle joint centre
 LKJC2  = Trial.Vmarker(7).Trajectory.smooth;
-LTIB22 = Trial.Marker(36).Trajectory.smooth; % Oscar 36 (TIB1), other 37 (TIB2)
+LTIB22 = Trial.Marker(37).Trajectory.smooth;
 LANK2  = Trial.Marker(38).Trajectory.smooth;
 LAJC   = chord_func(LKJC2,LTIB22,LANK2,Participant.LAnkleWidth,Session.markerHeight)';
 % Store virtual marker
@@ -284,12 +284,12 @@ w8                         = Z8;
 u8                         = X8;
 Trial.Segment(8).Q.smooth  = [u8;rP8;rD8;w8];
 Trial.Segment(8).rM.smooth = [LTIB2,LANK,LMED,LTIAP,LTIAD];
-Trial.Segment(8).rM.label  = {'LTIB','LANK','LMED','LTIAP','LTIAD'};
-Trial.Segment(8).wM        = [Trial.Marker(34).IKweight,...
-                              Trial.Marker(35).IKweight,...
-                              Trial.Marker(37).IKweight,...
+Trial.Segment(8).rM.label  = {'LTIB2','LANK','LMED','LTIAP','LTIAD'};
+Trial.Segment(8).wM        = [Trial.Marker(37).IKweight,...
                               Trial.Marker(38).IKweight,...
-                              Trial.Marker(39).IKweight];
+                              Trial.Marker(39).IKweight,...
+                              Trial.Marker(34).IKweight,...
+                              Trial.Marker(35).IKweight];
 
 % -------------------------------------------------------------------------
 % Left foot parameters
@@ -327,5 +327,5 @@ Trial.Segment(7).rM.label  = {'LHEE','LTOE','LFMH','LVMV','LSMH'};
 Trial.Segment(7).wM        = [Trial.Marker(40).IKweight,...
                               Trial.Marker(41).IKweight,...
                               Trial.Marker(42).IKweight,...
-                              Trial.Marker(43).IKweight,...
-                              Trial.Marker(44).IKweight];
+                              Trial.Marker(44).IKweight,...
+                              Trial.Marker(43).IKweight];

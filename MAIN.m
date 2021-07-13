@@ -124,7 +124,7 @@ for i = 1:size(Static,2)
     Static(i)         = InitialiseSegments(Static(i));
     Static(i)         = InitialiseJoints(Static(i));
     Static(i)         = ProcessMarkerTrajectories([],Static(i));
-    Static(i)         = DefineSegments_CGM24(Session,Participant,[],Static(i));
+    Static(i)         = DefineSegments_CGM10(Session,Participant,[],Static(i));
     clear Marker;
     
     % Store processed static data in a new C3D file
